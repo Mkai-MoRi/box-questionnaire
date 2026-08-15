@@ -206,9 +206,53 @@ body{background:#000;font-family:Roboto,'Noto Sans JP',Arial,sans-serif;color:va
             </div>
 
             <div class="page" data-page>
-              <p class="q-title">お名前<span class="star">*</span></p>
-              <p class="q-help">当日の受付でお呼びします。</p>
-              <input class="short" type="text" placeholder="回答を入力" autocomplete="off">
+              <p class="q-title" id="q1">カフェや電車で、つい他人の会話が気になってしまう<span class="star">*</span></p>
+              <div class="opts" role="radiogroup" aria-labelledby="q1">
+                <label class="opt">
+                  <input type="radio" name="q1" value="はい">
+                  <span class="dot" aria-hidden="true"></span>
+                  <span>はい</span>
+                </label>
+                <label class="opt">
+                  <input type="radio" name="q1" value="いいえ">
+                  <span class="dot" aria-hidden="true"></span>
+                  <span>いいえ</span>
+                </label>
+              </div>
+              <div class="error"><svg width="16" height="16" viewBox="0 0 24 24" fill="#d93025"><path d="M12 2 1 21h22L12 2zm1 14h-2v2h2v-2zm0-6h-2v4h2v-4z"/></svg><span>必須の質問です</span></div>
+            </div>
+
+            <div class="page" data-page>
+              <p class="q-title" id="q2">電車で向かいに座った人を見て、どんな仕事をしているか勝手に想像したことがある<span class="star">*</span></p>
+              <div class="opts" role="radiogroup" aria-labelledby="q2">
+                <label class="opt">
+                  <input type="radio" name="q2" value="はい">
+                  <span class="dot" aria-hidden="true"></span>
+                  <span>はい</span>
+                </label>
+                <label class="opt">
+                  <input type="radio" name="q2" value="いいえ">
+                  <span class="dot" aria-hidden="true"></span>
+                  <span>いいえ</span>
+                </label>
+              </div>
+              <div class="error"><svg width="16" height="16" viewBox="0 0 24 24" fill="#d93025"><path d="M12 2 1 21h22L12 2zm1 14h-2v2h2v-2zm0-6h-2v4h2v-4z"/></svg><span>必須の質問です</span></div>
+            </div>
+
+            <div class="page" data-page>
+              <p class="q-title" id="q3">人間観察はおすきですか？<span class="star">*</span></p>
+              <div class="opts" role="radiogroup" aria-labelledby="q3">
+                <label class="opt">
+                  <input type="radio" name="q3" value="はい">
+                  <span class="dot" aria-hidden="true"></span>
+                  <span>はい</span>
+                </label>
+                <label class="opt">
+                  <input type="radio" name="q3" value="いいえ">
+                  <span class="dot" aria-hidden="true"></span>
+                  <span>いいえ</span>
+                </label>
+              </div>
               <div class="error"><svg width="16" height="16" viewBox="0 0 24 24" fill="#d93025"><path d="M12 2 1 21h22L12 2zm1 14h-2v2h2v-2zm0-6h-2v4h2v-4z"/></svg><span>必須の質問です</span></div>
             </div>
 
@@ -446,11 +490,37 @@ function submit(){
     stage.style.background = 'var(--kv-blue)';
   }, 3300);
 
-  /* 3. 黒い箱になってから回る */
+  /* 3. 黒い箱を一回転させ、立体であることを見せる */
   setTimeout(() => {
     stage.style.perspective = FINAL.persp + 'px';
-    cube.style.transition = 'transform 2.6s cubic-bezier(.35,.6,.25,1)';
-    cube.style.transform = finalTransform();
+    cube.style.transition = 'none';
+
+    if(location.hash === '#tune' || matchMedia('(prefers-reduced-motion: reduce)').matches){
+      cube.style.transform = finalTransform();
+      return;
+    }
+
+    const target = `translate(${FINAL.x}%, ${FINAL.y}%) translateZ(${FINAL.z}px)`;
+    const pose = (rotY, rotX, scale) =>
+      `${target} rotateY(${rotY}deg) rotateX(${rotX}deg) ` +
+      `rotateZ(${FINAL.rotZ}deg) scale(${scale})`;
+    const spin = cube.animate([
+      {
+        transform:'translate(0%, 0%) translateZ(0px) rotateY(0deg) rotateX(0deg) rotateZ(0deg) scale(1)',
+        offset:0
+      },
+      {transform:pose(FINAL.rotY + 110, -10, FINAL.scale), offset:.30},
+      {transform:pose(FINAL.rotY + 230, 7, FINAL.scale), offset:.62},
+      {transform:pose(FINAL.rotY + 360, FINAL.rotX, FINAL.scale), offset:1}
+    ],{
+      duration:3800,
+      easing:'cubic-bezier(.35,.6,.25,1)',
+      fill:'forwards'
+    });
+    spin.addEventListener('finish', () => {
+      cube.style.transform = finalTransform();
+      spin.cancel();
+    }, {once:true});
   }, 4800);
 
   /* 4. 箱はそのまま。ロゴ・人物・開催情報が周りに集まってくる */
@@ -459,7 +529,7 @@ function submit(){
   setTimeout(() => {
     document.getElementById('kvTitleImg').src = KV_TITLE_SRC;
     document.getElementById('kvTitle').style.opacity = '1';
-  }, 7400);
+  }, 8800);
 
   /* 覗きに来る人 */
   setTimeout(() => {
@@ -469,21 +539,24 @@ function submit(){
     per.style.bottom = FINAL.py + '%';
     per.style.height = FINAL.ph + '%';
     per.style.opacity = '1';
-  }, 8800);
+  }, 10000);
 
   /* 下の帯（コピー・日程・UZU） */
   setTimeout(() => {
     const bd = document.getElementById('kvBand');
     bd.setAttribute('aria-hidden', 'false');
     bd.style.opacity = '1';
-  }, 10200);
+  }, 11400);
 
 }
 
 nextBtn.addEventListener('click', next);
 backBtn.addEventListener('click', back);
 clearBtn.addEventListener('click', () => {
-  document.querySelectorAll('input').forEach(i => { i.checked = false; i.value = ''; });
+  document.querySelectorAll('input').forEach(i => {
+    if(i.type === 'radio') i.checked = false;
+    else i.value = '';
+  });
   document.querySelectorAll('.error').forEach(e => e.classList.remove('on'));
   step = 0; place(true); chrome();
 });
