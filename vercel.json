@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/g/outputs/peep-card.html" }
+  ]
+}
