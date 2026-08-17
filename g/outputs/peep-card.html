@@ -7,7 +7,10 @@
 <link rel="preload" as="image" href="/g/outputs/kv-final.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Noto+Sans+JP:wght@400;500&family=Noto+Serif+JP:wght@200;300;400&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+/* intro-pending は送信後 gate に移動 */
+</script>
 <style>
 :root{
   --accent:#673ab7;
@@ -19,7 +22,8 @@
   --ink-hint:#70757a;
   --line:#dadce0;
   --req:#d93025;
-  --kv-blue:#1a45df;
+  --kv-blue:#FB4104;
+  --gate-red:#FB4104;
   --ease:cubic-bezier(.22,.8,.2,1);
 }
 @property --hole-radius{
@@ -66,7 +70,7 @@ body{font-family:Roboto,'Noto Sans JP',Arial,sans-serif;color:var(--ink);-webkit
 /* 箱が最終位置へ着地したあと、完成KVへ一枚の画として溶け込ませる */
 .kv-poster{
   position:fixed;inset:0;z-index:20;display:grid;place-items:center;
-  background:#07176f;opacity:0;visibility:hidden;pointer-events:none;
+  background:#FB4104;opacity:0;visibility:hidden;pointer-events:none;
   transform:scale(1.018);filter:saturate(.96) brightness(.96);
   transition:opacity 1.8s cubic-bezier(.22,.72,.2,1),
     transform 2.8s cubic-bezier(.22,.72,.2,1),
@@ -214,7 +218,7 @@ body{font-family:Roboto,'Noto Sans JP',Arial,sans-serif;color:var(--ink);-webkit
 .sheet-anchor.has-peep-hole{--hole-radius:10px}
 .sheet{position:absolute;inset:0;overflow:hidden;background:transparent;
   transition:transform 1.1s cubic-bezier(.5,0,.75,1)}
-.track{position:absolute;top:0;left:0;width:100%;transition:transform .55s var(--ease)}
+.track{position:absolute;top:0;left:0;width:100%;transition:transform .32s var(--ease)}
 .page{
   display:flex;flex-direction:column;justify-content:flex-start;padding:24px;
   overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;
@@ -270,6 +274,8 @@ body{font-family:Roboto,'Noto Sans JP',Arial,sans-serif;color:var(--ink);-webkit
   background:none;border:0;color:var(--accent);height:36px;padding:0 8px;border-radius:4px;cursor:pointer}
 .clear:hover{background:rgba(103,58,183,.06)}
 .bar{height:4px;background:#e0e0e0;border-radius:2px;overflow:hidden}
+@keyframes dot-off{to{opacity:0;transform:scale(.08)}}
+.page.is-leaving .dot::after{animation:dot-off 0.001s linear forwards !important}
 .bar > i{display:block;height:100%;background:var(--accent);transition:width .3s var(--ease)}
 /* 狭いスマホと横向きスマホでは、正方形の中だけをコンパクトにする */
 @media (max-width:600px), (max-height:520px){
@@ -310,9 +316,106 @@ body.is-tiny .clear,body.is-tiny .bar{display:none}
 body.is-tiny .ui{gap:4px}
 
 @media (prefers-reduced-motion:reduce){*{transition-duration:.01ms !important}}
+
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+html.intro-pending .stage,
+html.intro-pending .kv-title,
+html.intro-pending .kv-person,
+html.intro-pending .kv-band,
+html.intro-pending .kv-poster{visibility:hidden}
+
+/* ---- GATE：8×8の文字が箱になり、句点が覗き口になる導入 ---- */
+.statement__copy{
+  --sq:min(72vw,58vh,430px);
+  position:relative;display:grid;
+  grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);
+  width:var(--sq);height:var(--sq);
+  font-family:'Noto Serif JP','Yu Mincho','Hiragino Mincho ProN',serif;
+  font-weight:200;font-size:calc(var(--sq) / 10.6);line-height:1;letter-spacing:0;
+  color:#fff;
+}
+.statement__copy .c{
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;transform:none;
+  transition:opacity .35s linear;
+  transition-delay:var(--d,0ms);
+}
+.statement__copy.is-on .c{opacity:1}
+.statement__copy .c.p{color:transparent;position:relative}
+.statement__copy .c.p::after{
+  content:"";position:absolute;left:50%;top:50%;
+  width:.17em;height:.17em;border-radius:50%;background:var(--gate-red);
+  opacity:0;transform:translate(-50%,-50%) translate(-.26em,.26em);
+  transition:opacity .35s linear;
+  transition-delay:var(--d,0ms);
+}
+.statement__copy.is-on .c.p::after{opacity:1}
+
+.gate{display:none;color:#fff}
+.gate.is-live{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:fixed;inset:0;z-index:200;background:#000;
+  padding:clamp(20px,5vw,64px);
+}
+.gate__field{
+  position:relative;padding:clamp(26px,6vmin,58px);
+  transform-origin:var(--zoom-x,50%) var(--zoom-y,50%);
+  transition:transform 2.6s cubic-bezier(.62,0,.16,1),opacity 1.7s ease;
+}
+.gate__frame{
+  position:absolute;inset:0;width:100%;height:100%;overflow:visible;
+  opacity:.22;transition:opacity .8s ease;
+}
+.gate.is-framed .gate__frame{opacity:1}
+.gate__frame span{position:absolute;display:block;background:rgba(255,255,255,.72)}
+.gate__line--top,.gate__line--bottom{width:100%;height:1px}
+.gate__line--right,.gate__line--left{width:1px;height:100%}
+.gate__line--top{left:0;top:0}
+.gate__line--right{right:0;top:0}
+.gate__line--bottom{right:0;bottom:0}
+.gate__line--left{left:0;bottom:0}
+
+.gate.is-holes .c:not(.p){opacity:0;transition:opacity 1.35s ease}
+.gate.is-holes .c.p{pointer-events:none}
+.gate.is-holes .c.p::after{
+  transform:translate(-50%,-50%) translate(-.26em,.26em) scale(1.55);
+  transition:transform .8s ease,box-shadow .8s ease;
+  box-shadow:0 0 0 0 rgba(251,65,4,.5)
+}
+.gate.is-holes .c.p.is-target::after{animation:hole 2.6s ease-in-out infinite}
+.gate.is-holes .c.p.is-target{pointer-events:auto;cursor:crosshair}
+.gate.is-holes .c.p.is-target:hover::after{transform:translate(-50%,-50%) translate(-.26em,.26em) scale(2.25)}
+@keyframes hole{
+  0%,100%{box-shadow:0 0 0 0 rgba(251,65,4,.45)}
+  60%{box-shadow:0 0 0 14px rgba(251,65,4,0)}
+}
+.gate.is-approaching .gate__field{transform:scale(14);opacity:0}
+.gate.is-approaching .gate__frame{opacity:0;transition:opacity .7s ease}
+.gate__skip{
+  position:absolute;right:clamp(20px,5vw,64px);bottom:22px;
+  background:none;border:0;padding:8px;cursor:pointer;
+  font-family:'Roboto Mono',ui-monospace,monospace;
+  font-size:11px;letter-spacing:.22em;color:rgba(255,255,255,.4);
+}
+.gate__skip:hover{color:#fff}
+.gate.is-text-fade .c{opacity:0 !important;transition:opacity .65s ease !important;transition-delay:0ms !important}
+.gate.is-out{opacity:0;transition:opacity .8s ease;pointer-events:none}
 </style>
 </head>
 <body>
+
+<div class="gate" id="gate" role="dialog" aria-modal="true" aria-label="導入" tabindex="-1">
+  <div class="gate__field">
+    <div class="gate__frame" aria-hidden="true">
+      <span class="gate__line--top"></span>
+      <span class="gate__line--right"></span>
+      <span class="gate__line--bottom"></span>
+      <span class="gate__line--left"></span>
+    </div>
+    <p class="statement__copy" data-split>１辺３ｍの黒箱。その中に広がる小さな世界。あなたは覗き、聞くことしかできない。そこでは、たしかに誰かの人生がおわろうとしている。</p>
+  </div>
+  <button class="gate__skip" id="gateSkip" type="button">スキップ</button>
+</div>
 
 <div class="stage">
   <div class="cube" id="cube">
@@ -481,8 +584,10 @@ const kvPoster = document.getElementById('kvPoster');
 
 let step = 0, done = false, busy = false, S = 0, H = 0;
 let posterShown = false;
+let peepRaf = 0;
 
 function closePeepHole(){
+  if(peepRaf){ cancelAnimationFrame(peepRaf); peepRaf = 0; }
   anchor.classList.remove('has-peep-hole');
 }
 
@@ -497,7 +602,11 @@ function openPeepHole(input){
   const anchorY = (cy - anchorRect.top) / anchorRect.height * 100;
   anchor.style.setProperty('--hole-x', anchorX + '%');
   anchor.style.setProperty('--hole-y', anchorY + '%');
-  requestAnimationFrame(() => anchor.classList.add('has-peep-hole'));
+  if(peepRaf) cancelAnimationFrame(peepRaf);
+  peepRaf = requestAnimationFrame(() => {
+    peepRaf = 0;
+    anchor.classList.add('has-peep-hole');
+  });
 }
 
 function syncPeepHole(){
@@ -518,7 +627,7 @@ function placeBoxHoleAtSelection(){
   const x = (cx - frontRect.left) / frontRect.width * 100;
   const y = (cy - frontRect.top) / frontRect.height * 100;
   const radius = Math.max(9, Math.round(S * .024)) + 'px';
-  front.style.setProperty('--box-hole-x', x + '%');
+  front.style.setProperty('--box-hole-x', (100 - x) + '%');
   front.style.setProperty('--box-hole-y', y + '%');
   front.style.setProperty('--box-hole-radius', radius);
   leftFace.style.setProperty('--side-hole-y', y + '%');
@@ -676,14 +785,28 @@ function next(){
   if(busy || done) return;
   if(!validate(pages[step])) return;
   if(step === pages.length - 2){ submit(); return; }
-  busy = true; step++; place(true); chrome();
-  setTimeout(() => busy = false, 560);
+  busy = true;
+  pages[step].classList.add('is-leaving');
+  closePeepHole();
+  step++; place(true); chrome();
+  setTimeout(() => {
+    busy = false;
+    pages.forEach(p => p.classList.remove('is-leaving'));
+    syncPeepHole();
+  }, 360);
 }
 function back(){
   if(busy || done || step === 0) return;
   clearError(pages[step]);
-  busy = true; step--; place(true); chrome();
-  setTimeout(() => busy = false, 560);
+  busy = true;
+  pages[step].classList.add('is-leaving');
+  closePeepHole();
+  step--; place(true); chrome();
+  setTimeout(() => {
+    busy = false;
+    pages.forEach(p => p.classList.remove('is-leaving'));
+    syncPeepHole();
+  }, 360);
 }
 
 /* 送信 → フォーム面をそのまま黒い立方体へ変える → 一回転 → KV */
@@ -692,38 +815,31 @@ function submit(){
   placeBoxHoleAtSelection();
   foot.hidden = true; clearBtn.hidden = true; bar.hidden = true;
 
-  const stage = document.querySelector('.stage');
+  /* ゲート演出中にキューブを黒くサイレント変換する */
+  anchor.style.visibility = 'hidden';
+  ui.style.visibility = 'hidden';
+  frame.classList.add('final-box');
+  frame.style.visibility = 'hidden';
+  frame.style.boxShadow = 'none';
+  frame.style.background = 'transparent';
+  frame.style.borderRadius = '0';
+  frame.style.outline = 'none';
+  cube.classList.add('black-structure');
+  document.querySelectorAll('.face').forEach(f => {
+    f.style.background = '#0a0a0c';
+    f.style.outline = '1px solid rgba(255,255,255,.08)';
+  });
+  front.style.background = '#0a0a0c';
+  front.style.outline = 'none';
 
-  /* 先にアンケートの穴だけを残し、全6面を黒い箱へ変える */
-  setTimeout(() => {
-    cube.classList.add('box-morph');
-    document.querySelectorAll('.face:not(.front)').forEach(f => {
-      f.style.outline = '1px solid rgba(255,255,255,.14)';
-    });
-    front.style.outline = 'none';
-    stage.style.background = 'var(--kv-blue)';
-  }, 200);
+  /* 8x8テキスト演出 → 消滅 → ゲートフェードと同時に白背景＋回転 */
+  playGate(function(){
+    const stage = document.querySelector('.stage');
 
-  /* 黒い壁が重なり切ってから、下にあるアンケートだけを片づける */
-  setTimeout(() => {
-    anchor.style.visibility = 'hidden';
-    ui.style.visibility = 'hidden';
-    frame.classList.add('final-box');
-    frame.style.visibility = 'hidden';
-    frame.style.boxShadow = 'none';
-    frame.style.background = 'transparent';
-    frame.style.borderRadius = '0';
-    frame.style.outline = 'none';
-    cube.classList.add('black-structure');
-  }, 1150);
+    /* ゲートが消え始める瞬間から白背景へトランジション */
+    stage.style.transition = 'background-color 3.2s cubic-bezier(.22,.8,.2,1)';
+    stage.style.background = '#ffffff';
 
-  /* 赤い穴が見えない裏側まで回った瞬間に、KVと同じ左側面へ受け渡す */
-  setTimeout(() => {
-    cube.classList.add('hole-on-side');
-  }, 2200);
-
-  /* 黒い3D BOXが完成してから一回転を始める */
-  setTimeout(() => {
     stage.style.perspective = FINAL.persp + 'px';
     cube.style.transition = 'none';
 
@@ -759,8 +875,7 @@ function submit(){
       spin.cancel();
       setTimeout(revealPoster, 140);
     }, {once:true});
-  }, 1200);
-
+  });
 }
 
 nextBtn.addEventListener('click', next);
@@ -852,6 +967,102 @@ function tuner(){
     const c = document.getElementById('copied');
     c.style.display = 'block'; setTimeout(() => c.style.display = 'none', 1600);
   });
+}
+
+/* ---- 8×8：1文字ずつセルに分解し、句点だけ朱赤の丸に ---- */
+(function(){
+  Array.prototype.forEach.call(document.querySelectorAll('[data-split]'), function(el){
+    var text = el.textContent.trim();
+    var isGateCopy = !!el.closest('.gate');
+    var revealDelay = 0;
+    var lastRevealDelay = 0;
+    var sr = document.createElement('span');
+    sr.className = 'sr'; sr.textContent = text;
+    el.textContent = '';
+    el.appendChild(sr);
+    text.split('').forEach(function(ch){
+      var s = document.createElement('span');
+      s.className = 'c' + (ch === '。' ? ' p' : '');
+      s.setAttribute('aria-hidden','true');
+      s.textContent = ch;
+      var pace = isGateCopy ? 78 : 46;
+      lastRevealDelay = revealDelay;
+      s.style.setProperty('--d', revealDelay + 'ms');
+      el.appendChild(s);
+      revealDelay += pace;
+      if(ch === '、') revealDelay += isGateCopy ? 360 : 220;
+      if(ch === '。') revealDelay += isGateCopy ? 700 : 420;
+    });
+    if(isGateCopy) el.setAttribute('data-reveal-duration', String(lastRevealDelay));
+  });
+})();
+
+/* ---- GATE：送信後に呼び出される。テキスト登場 → 消滅 → ボックス回転へ ---- */
+function playGate(onDone){
+  var gate = document.getElementById('gate');
+  if(!gate || location.hash === '#tune' ||
+     window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    if(onDone) onDone(); return;
+  }
+
+  /* クラスリセット */
+  gate.classList.remove('is-out','is-holes','is-framed','is-approaching','is-text-fade');
+  var copy = gate.querySelector('.statement__copy');
+  if(copy) copy.classList.remove('is-on');
+
+  var inerted = [];
+  Array.prototype.forEach.call(document.body.children, function(el){
+    if(el === gate) return;
+    el.setAttribute('inert','');
+    inerted.push(el);
+  });
+
+  /* キューブと同じサイズにする */
+  if(copy && typeof S !== 'undefined' && S > 0){
+    copy.style.setProperty('--sq', S + 'px');
+  }
+
+  gate.classList.add('is-live');
+  gate.focus();
+
+  var timers = [];
+  function later(fn, ms){ timers.push(setTimeout(fn, ms)); }
+
+  /* タイミング計算 */
+  var copyStart = 400;
+  var measuredReveal = copy ? parseInt(copy.getAttribute('data-reveal-duration') || '', 10) : NaN;
+  var CHAR_FADE = 350;
+  var textFullyOn = copyStart + (isNaN(measuredReveal) ? 63 * 78 : measuredReveal) + CHAR_FADE;
+  var pauseAfterText = 1000;          /* テキストが読まれる間 */
+  var textFadeStart = textFullyOn + pauseAfterText;
+  var TEXT_FADE_DUR = 650;            /* ms: テキストフェードアウト時間 */
+  var dismissStart = textFadeStart + TEXT_FADE_DUR + 200;
+
+  /* テキスト登場 */
+  later(function(){ if(copy) copy.classList.add('is-on'); }, copyStart);
+  /* テキスト消滅 */
+  later(function(){ gate.classList.add('is-text-fade'); }, textFadeStart);
+  /* ゲートフェードアウト開始（同時にonDone=回転を起動） */
+  later(dismiss, dismissStart);
+
+  var dismissed = false;
+  function dismiss(){
+    if(dismissed) return;
+    dismissed = true;
+    timers.forEach(clearTimeout);
+    gate.classList.add('is-out');
+    inerted.forEach(function(el){ el.removeAttribute('inert'); });
+    document.removeEventListener('keydown', onKey);
+    /* ゲートが消え始めると同時に回転を開始するためすぐにコールバック */
+    if(onDone) onDone();
+    setTimeout(function(){ gate.style.display = 'none'; }, 900);
+  }
+
+  function onKey(e){
+    if(e.key === 'Escape'){ dismiss(); }
+  }
+  document.addEventListener('keydown', onKey);
+  document.getElementById('gateSkip').addEventListener('click', function(){ dismiss(); });
 }
 
 layout();
