@@ -1,5 +1,6 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/g/outputs/peep-card.html" }
+    { "source": "/", "destination": "/g/outputs/peep-card.html" },
+    { "source": "/kv-final.png", "destination": "/g/outputs/kv-final.png" }
   ]
 }
