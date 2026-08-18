@@ -258,7 +258,6 @@ html.kv-revealed .kv-more{display:block}
 .kv-share.is-copied{border-color:#e8481f;color:#e8481f}
 @media (max-width:520px){
   .kv-more__row{grid-template-columns:72px 1fr;gap:14px}
-  .kv-share{flex:1 1 calc(50% - 10px)}
 }
 .face.front{
   background:var(--card);overflow:hidden;pointer-events:none;
@@ -663,9 +662,11 @@ html.intro-pending .kv-poster{visibility:hidden}
     <p class="kv-more__note">詳細・ご予約方法は、<a class="kv-more__note-link" href="https://x.com/monitoring_BOX" target="_blank" rel="noopener noreferrer">公式アカウント（@monitoring_BOX）</a>をフォローしてお待ちください。</p>
     <div class="kv-more__share">
       <p class="kv-more__share-label">SHARE</p>
+      <a class="kv-share--x" id="shareX" target="_blank" rel="noopener noreferrer" href="https://x.com/intent/tweet?text=%E4%BA%BA%E9%96%93%E8%A6%B3%E5%AF%9F%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6%E3%81%AE%E3%82%A2%E3%83%B3%E3%82%B1%E3%83%BC%E3%83%88%E3%81%AB%E5%9B%9E%E7%AD%94%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F%E3%80%82%0A%40monitoring_BOX%0A%0A%E2%96%A0%E2%96%A0%E2%96%A0%E2%96%A0%E2%96%A0%E2%96%A0%E2%96%A0%E2%96%A0%E2%96%A0%E2%96%A0%0A%0A%E3%80%90%E4%BA%BA%E9%96%93%E8%A6%B3%E5%AF%9F%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6%E3%81%AE%E3%82%A2%E3%83%B3%E3%82%B1%E3%83%BC%E3%83%88%E3%80%91%0A%0A%E5%9B%9E%E7%AD%94%E3%81%AE%E3%81%94%E5%8D%94%E5%8A%9B%E3%82%92%E3%81%8A%E9%A1%98%E3%81%84%E3%81%84%E3%81%9F%E3%81%97%E3%81%BE%E3%81%99%E3%80%82%0A%EF%BC%88%E6%89%80%E8%A6%81%E6%99%82%E9%96%931%E5%88%86%EF%BC%89%0A%0A%E2%96%BC%E5%9B%9E%E7%AD%94%E3%81%AF%E3%81%93%E3%81%A1%E3%82%89%E3%81%8B%E3%82%89%E2%96%BC%0Aform.monitoring-box.uzu-app.com">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.727-8.835L1.254 2.25H8.08l4.253 5.622L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        Xでシェア
+      </a>
       <div class="kv-more__share-row">
-        <a class="kv-share" id="shareX" target="_blank" rel="noopener noreferrer">X</a>
-        <a class="kv-share" id="shareLine" target="_blank" rel="noopener noreferrer">LINE</a>
         <button class="kv-share" type="button" id="shareCopy">リンクをコピー</button>
       </div>
     </div>
@@ -1176,12 +1177,7 @@ setTimeout(layout, 400);
 
 (function(){
   const shareUrl = location.origin + '/';
-  const shareText = '人間観察BOX　理想のおしまい';
-  const x = document.getElementById('shareX');
-  const line = document.getElementById('shareLine');
   const copy = document.getElementById('shareCopy');
-  if(x) x.href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent(shareUrl);
-  if(line) line.href = 'https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent(shareUrl);
   if(copy) copy.addEventListener('click', async () => {
     try{
       await navigator.clipboard.writeText(shareUrl);
