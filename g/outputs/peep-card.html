@@ -218,6 +218,10 @@ html.kv-revealed .kv-more{display:block}
   font-family:"UtsukushiMincho","Noto Serif JP","Hiragino Mincho ProN",serif;
   font-size:clamp(14px,2.4vw,19px);letter-spacing:.05em;color:#f4efe7;margin:0
 }
+.kv-more__range{
+  display:inline-block;letter-spacing:0;padding:0 .28em;
+  font-family:"Noto Sans JP",Roboto,Arial,sans-serif;font-weight:500
+}
 .kv-more__note{
   margin:clamp(22px,4vw,32px) 0 0;font-size:clamp(11px,1.9vw,13px);
   letter-spacing:.1em;color:#8f8a82;line-height:1.9
@@ -626,7 +630,7 @@ html.intro-pending .kv-poster{visibility:hidden}
     <p class="kv-more__label">ABOUT</p>
     <h2 class="kv-more__title">人間観察BOX</h2>
     <p class="kv-more__sub">理想のおしまい</p>
-    <p class="kv-more__body">一辺3mの箱の中に広がる、小さな世界。あなたは覗き、聴くことしかできない。そこでは、たしかに誰かの人生が終わろうとしていた。静かな好奇心の、その最前線へ。</p>
+    <p class="kv-more__body">一辺3mの黒い箱の中に広がる、小さな世界。あなたは覗き、聴くことしかできない。そこでは、たしかに誰かの人生が終わろうとしている。</p>
     <div class="kv-more__facts">
       <div class="kv-more__row">
         <span class="kv-more__key">会期</span>
@@ -1094,8 +1098,19 @@ function playGate(onDone){
 
   /* テキスト登場 */
   later(function(){ if(copy) copy.classList.add('is-on'); }, copyStart);
-  /* テキスト消滅 → 黒い正方形が残る */
-  later(function(){ gate.classList.add('is-text-fade'); }, textFadeStart);
+  /* テキスト消滅 → 黒い正方形が残る
+     iOS Safari は var(--d) 由来の transition-delay をクラス変更時に読み直さず、
+     左上（--d:0）の1文字目だけ先に消えてしまう。登場用の遅延をインラインで
+     確実に 0 へ落とし、全セルを同時にフェードさせる。 */
+  later(function(){
+    if(copy){
+      Array.prototype.forEach.call(copy.querySelectorAll('.c'), function(c){
+        c.style.setProperty('--d','0ms');
+        c.style.transitionDelay = '0ms';
+      });
+    }
+    gate.classList.add('is-text-fade');
+  }, textFadeStart);
   /* 周囲が白くなる（正方形が黒く浮かび上がる） */
   later(function(){
     gate.style.transition = 'background-color ' + (BG_WHITE_DUR / 1000) + 's ease';
