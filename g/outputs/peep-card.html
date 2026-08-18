@@ -226,6 +226,11 @@ html.kv-revealed .kv-more{display:block}
   margin:clamp(22px,4vw,32px) 0 0;font-size:clamp(11px,1.9vw,13px);
   letter-spacing:.1em;color:#8f8a82;line-height:1.9
 }
+.kv-more__note-link{
+  color:#f4efe7;text-decoration:underline;text-underline-offset:.22em;
+  text-decoration-color:rgba(244,239,231,.45)
+}
+.kv-more__note-link:hover{color:#fff;text-decoration-color:#e8481f}
 .kv-more__share{
   margin:clamp(40px,8vw,64px) 0 0;padding:clamp(24px,5vw,36px) 0 0;
   border-top:1px solid rgba(232,72,31,.4)
@@ -233,7 +238,16 @@ html.kv-revealed .kv-more{display:block}
 .kv-more__share-label{
   font:600 12px/1 Roboto,Arial,sans-serif;letter-spacing:.34em;color:#e8481f;margin:0 0 16px
 }
-.kv-more__share-row{display:flex;flex-wrap:wrap;gap:10px}
+.kv-share--x{
+  appearance:none;display:flex;align-items:center;justify-content:center;gap:12px;
+  width:100%;min-height:58px;padding:0 28px;border:0;border-radius:0;
+  background:#e8481f;color:#fff;text-decoration:none;cursor:pointer;
+  font:700 clamp(15px,2.6vw,18px)/1 'Noto Sans JP',Roboto,Arial,sans-serif;
+  letter-spacing:.18em;transition:background .15s,filter .15s
+}
+.kv-share--x svg{width:1.15em;height:1.15em;flex:0 0 auto;fill:currentColor}
+.kv-share--x:hover{background:#ff5a2e;color:#fff}
+.kv-more__share-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
 .kv-share{
   appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;
   min-height:42px;padding:0 16px;border:1px solid rgba(244,239,231,.28);border-radius:999px;
@@ -414,7 +428,12 @@ html.intro-pending .kv-poster{visibility:hidden}
   transition-delay:var(--d,0ms);
 }
 .statement__copy.is-on .c{opacity:1}
-.statement__copy .c.p{color:transparent;position:relative}
+.statement__copy .c.p{color:transparent;position:relative;z-index:10}
+/* テキストを一気に覆い隠す黒レイヤー（句読点=z-index:10 より背面） */
+.statement__copy .gate__mask{
+  position:absolute;inset:0;background:#000;z-index:5;
+  opacity:0;pointer-events:none;transition:opacity .55s ease;
+}
 .statement__copy .c.p::after{
   content:"";position:absolute;left:50%;top:50%;
   width:.17em;height:.17em;border-radius:50%;background:var(--gate-red);
@@ -471,8 +490,8 @@ html.intro-pending .kv-poster{visibility:hidden}
   font-size:11px;letter-spacing:.22em;color:rgba(0,0,0,.4);
 }
 .gate__skip:hover{color:#000}
-/* テキストは消えても、朱赤の句読点（丸）は残す */
-.gate.is-text-fade .c:not(.p){opacity:0 !important;transition:opacity .65s ease !important;transition-delay:0ms !important}
+/* テキストは黒レイヤーで一気に隠す。朱赤の句読点（丸）は前面に残す */
+.gate.is-text-fade .gate__mask{opacity:1}
 .gate.is-text-fade .c.p{opacity:1 !important}
 .gate.is-out{opacity:0;transition:opacity .8s ease;pointer-events:none}
 </style>
@@ -634,14 +653,14 @@ html.intro-pending .kv-poster{visibility:hidden}
     <div class="kv-more__facts">
       <div class="kv-more__row">
         <span class="kv-more__key">会期</span>
-        <p class="kv-more__val">2025.9.19 sat — 9.27 sun</p>
+        <p class="kv-more__val">2025.9.19 sat <span class="kv-more__range">〜</span> 9.27 sun</p>
       </div>
       <div class="kv-more__row">
         <span class="kv-more__key">会場</span>
         <p class="kv-more__val">都内某所にて開催</p>
       </div>
     </div>
-    <p class="kv-more__note">詳細・ご予約方法は追ってお知らせします。</p>
+    <p class="kv-more__note">詳細・ご予約方法は、<a class="kv-more__note-link" href="https://x.com/monitoring_BOX" target="_blank" rel="noopener noreferrer">公式アカウント（@monitoring_BOX）</a>をフォローしてお待ちください。</p>
     <div class="kv-more__share">
       <p class="kv-more__share-label">SHARE</p>
       <div class="kv-more__share-row">
@@ -1098,16 +1117,19 @@ function playGate(onDone){
 
   /* テキスト登場 */
   later(function(){ if(copy) copy.classList.add('is-on'); }, copyStart);
-  /* テキスト消滅 → 黒い正方形が残る
-     iOS Safari は var(--d) 由来の transition-delay をクラス変更時に読み直さず、
-     左上（--d:0）の1文字目だけ先に消えてしまう。登場用の遅延をインラインで
-     確実に 0 へ落とし、全セルを同時にフェードさせる。 */
+  /* テキスト消滅 → 黒い正方形が残る。
+     セル単位のフェードは実機(iOS Safari)で左上から順に消えることがあるため、
+     黒レイヤーを1枚かぶせて必ず全文字を同時に消す。朱色の句読点は前面に残す。 */
   later(function(){
     if(copy){
-      Array.prototype.forEach.call(copy.querySelectorAll('.c'), function(c){
-        c.style.setProperty('--d','0ms');
-        c.style.transitionDelay = '0ms';
-      });
+      var mask = copy.querySelector('.gate__mask');
+      if(!mask){
+        mask = document.createElement('div');
+        mask.className = 'gate__mask';
+        mask.setAttribute('aria-hidden','true');
+        copy.appendChild(mask);
+      }
+      void mask.offsetWidth; /* 初回追加でも transition が効くよう reflow */
     }
     gate.classList.add('is-text-fade');
   }, textFadeStart);
