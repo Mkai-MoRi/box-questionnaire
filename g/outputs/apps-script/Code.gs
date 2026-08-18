@@ -3,7 +3,7 @@
  *
  * フォームからの送信を、種別ごとに別シートへ1行ずつ追記します。
  *   - type=answer → 「回答」シート（タイムスタンプ / q1 / q2 / q3 / id）
- *   - type=share  → 「シェア」シート（タイムスタンプ / チャネル / id）
+ *   - type=share  → 「シェア」シート（タイムスタンプ / 押されたボタン / id）
  * id は回答とシェアを突き合わせるためのセッションIDです。
  *
  * ── セットアップ / 更新手順 ─────────────────────────
@@ -28,7 +28,7 @@ function doPost(e) {
   try {
     var p = (e && e.parameter) ? e.parameter : {};
     if ((p.type || '') === 'share') {
-      var shareSheet = getSheet_('シェア', ['タイムスタンプ', 'チャネル', 'id']);
+      var shareSheet = getSheet_('シェア', ['タイムスタンプ', '押されたボタン', 'id']);
       shareSheet.appendRow([new Date(), p.channel || '', p.id || '']);
     } else {
       var answerSheet = getSheet_('回答', ['タイムスタンプ', 'q1', 'q2', 'q3', 'id']);

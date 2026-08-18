@@ -1229,10 +1229,10 @@ setTimeout(layout, 400);
 (function(){
   const shareUrl = location.origin + '/';
   const shareX = document.getElementById('shareX');
-  if(shareX) shareX.addEventListener('click', () => recordShare('X'));
+  if(shareX) shareX.addEventListener('click', () => recordShare('Xでシェア'));
   const copy = document.getElementById('shareCopy');
   if(copy) copy.addEventListener('click', async () => {
-    recordShare('コピー');
+    recordShare('リンクをコピー');
     try{
       await navigator.clipboard.writeText(shareUrl);
     }catch(e){
