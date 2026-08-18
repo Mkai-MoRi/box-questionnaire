@@ -25,6 +25,13 @@
 /* intro-pending は送信後 gate に移動 */
 </script>
 <style>
+@font-face{
+  font-family:"UtsukushiMincho";
+  src:local("02UtsukushiMincho"),
+      url("/g/outputs/fonts/UtsukushiMincho.woff2") format("woff2"),
+      url("/g/outputs/fonts/UtsukushiMincho.otf") format("opentype");
+  font-weight:200 700;font-style:normal;font-display:swap;
+}
 :root{
   --accent:#673ab7;
   --accent-hover:#5b32a3;
@@ -107,7 +114,7 @@ body{font-family:Roboto,'Noto Sans JP',Arial,sans-serif;color:var(--ink);-webkit
   padding:clamp(12px,2.2vw,30px) clamp(18px,4.2vw,64px)
     calc(clamp(14px,2.2vw,30px) + env(safe-area-inset-bottom));
   color:#98291f;background:#f7f3ed;
-  font-family:'Noto Serif JP','Yu Mincho','Hiragino Mincho ProN',serif;
+  font-family:"UtsukushiMincho","Noto Serif JP","Hiragino Mincho ProN",serif;
   opacity:0;pointer-events:none;transition:opacity 1.1s ease;
 }
 .kv-band__lead{
@@ -308,9 +315,9 @@ html.intro-pending .kv-poster{visibility:hidden}
   position:relative;display:grid;
   grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);
   width:var(--sq);height:var(--sq);
-  font-family:'Noto Serif JP','Yu Mincho','Hiragino Mincho ProN',serif;
-  font-weight:200;font-size:calc(var(--sq) / 10.6);line-height:1;letter-spacing:0;
-  color:#fff;background:#0a0a0c;
+  font-family:"UtsukushiMincho","Noto Serif JP","Hiragino Mincho ProN",serif;
+  font-weight:200;font-size:calc(var(--sq) / 13);line-height:1;letter-spacing:0;
+  color:#fff;background:#000;
 }
 .statement__copy .c{
   display:flex;align-items:center;justify-content:center;
@@ -417,7 +424,7 @@ html.intro-pending .kv-poster{visibility:hidden}
               <div class="fcard fcard--head">
               <h1 class="form-title">人間観察についてのアンケート</h1>
               <p class="form-desc">回答内容は自動的に記録されます。
-所要時間はおよそ2分です。</p>
+所要時間はおよそ1分です。</p>
               <hr class="rule">
               <p class="req-note">* 必須の質問です</p>
               </div>
@@ -601,7 +608,8 @@ function layout(){
   const widthRatio = compact ? .98 : .88;
   const heightRatio = compact ? .97 : .88;
   const minimumOuterGap = compact ? 8 : 48;
-  const maxFrontVisual = compact ? Infinity : (390 * PERSP / (PERSP - 260));
+  /* どの画面幅でも正方形は中サイズで頭打ちにする（スマホは幅の方が小さいので実質フル幅のまま） */
+  const maxFrontVisual = 620;
   const targetVisual = Math.max(1, Math.min(
     viewportW * widthRatio,
     viewportH * heightRatio,
