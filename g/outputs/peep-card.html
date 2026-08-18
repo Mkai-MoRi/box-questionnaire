@@ -3,7 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
-<title>参加前アンケート</title>
+<title>人間観察についてのアンケート</title>
+<meta name="description" content="カフェや電車で、つい他人の会話が気になってしまう">
+<meta property="og:type" content="website">
+<meta property="og:title" content="人間観察についてのアンケート">
+<meta property="og:description" content="カフェや電車で、つい他人の会話が気になってしまう">
+<meta property="og:url" content="https://box-questionnaire-eta.vercel.app/">
+<meta property="og:image" content="https://box-questionnaire-eta.vercel.app/g/outputs/og-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="人間観察についてのアンケート">
+<meta name="twitter:description" content="カフェや電車で、つい他人の会話が気になってしまう">
+<meta name="twitter:image" content="https://box-questionnaire-eta.vercel.app/g/outputs/og-card.png">
 <link rel="preload" as="image" href="/g/outputs/kv-final.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,7 +29,7 @@
   --accent:#673ab7;
   --accent-hover:#5b32a3;
   --surface:#f0ebf8;
-  --card:#ffffff;
+  --card:#e7ddf6;
   --ink:#202124;
   --ink-sub:#5f6368;
   --ink-hint:#70757a;
@@ -26,15 +39,10 @@
   --gate-red:#FB4104;
   --ease:cubic-bezier(.22,.8,.2,1);
 }
-@property --hole-radius{
-  syntax:"<length>";
-  inherits:false;
-  initial-value:0px;
-}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{
   width:100%;height:100%;height:100svh;overflow:hidden;
-  background:#000;overscroll-behavior:none;-webkit-text-size-adjust:100%;
+  background:#fff;overscroll-behavior:none;-webkit-text-size-adjust:100%;
 }
 body{font-family:Roboto,'Noto Sans JP',Arial,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
 
@@ -42,6 +50,7 @@ body{font-family:Roboto,'Noto Sans JP',Arial,sans-serif;color:var(--ink);-webkit
 .stage{
   position:fixed;inset:0;width:100%;height:100%;height:100svh;height:100dvh;
   display:flex;align-items:center;justify-content:center;perspective:1800px;overflow:hidden;
+  background:#fff;
 }
 .cube{
   position:relative;transform-style:preserve-3d;
@@ -55,6 +64,7 @@ body{font-family:Roboto,'Noto Sans JP',Arial,sans-serif;color:var(--ink);-webkit
 .inner-face.i-left  {background:#D93F19}
 .inner-face.i-top   {background:#F25A2E}
 .inner-face.i-bottom{background:#C63714}
+/* アンケート中は橙の内面が見えないよう前面を白くする */
 .ui{transition:opacity .8s ease;pointer-events:auto}
 
 /* 最終画面の構成要素 */
@@ -70,15 +80,24 @@ body{font-family:Roboto,'Noto Sans JP',Arial,sans-serif;color:var(--ink);-webkit
 /* 箱が最終位置へ着地したあと、完成KVへ一枚の画として溶け込ませる */
 .kv-poster{
   position:fixed;inset:0;z-index:20;display:grid;place-items:center;
-  background:#FB4104;opacity:0;visibility:hidden;pointer-events:none;
-  transform:scale(1.018);filter:saturate(.96) brightness(.96);
-  transition:opacity 1.8s cubic-bezier(.22,.72,.2,1),
-    transform 2.8s cubic-bezier(.22,.72,.2,1),
-    filter 1.8s ease,visibility 0s linear 1.8s;
+  background:#FB4104;visibility:hidden;pointer-events:none;
+  --kv-ox:58%;--kv-oy:52%;
+  opacity:0;transform:scale(1.03);filter:saturate(.96) brightness(.96);
+  clip-path:circle(7% at var(--kv-ox) var(--kv-oy));
+  -webkit-clip-path:circle(7% at var(--kv-ox) var(--kv-oy));
+  transition:clip-path 1.7s cubic-bezier(.4,.7,.15,1),
+    -webkit-clip-path 1.7s cubic-bezier(.4,.7,.15,1),
+    opacity .8s ease,
+    transform 2.4s cubic-bezier(.3,.7,.2,1),
+    filter 1.8s ease,
+    visibility 0s linear 1.7s;
 }
-.kv-poster img{display:block;width:100%;height:100%;object-fit:contain}
+.kv-poster img{display:block;width:auto;height:auto;
+  max-width:100vw;max-height:100vh;max-height:100dvh;margin:auto}
 .kv-poster.is-visible{
   opacity:1;visibility:visible;transform:scale(1);filter:saturate(1) brightness(1);
+  clip-path:circle(150% at var(--kv-ox) var(--kv-oy));
+  -webkit-clip-path:circle(150% at var(--kv-ox) var(--kv-oy));
   transition-delay:0s;
 }
 
@@ -134,99 +153,56 @@ body{font-family:Roboto,'Noto Sans JP',Arial,sans-serif;color:var(--ink);-webkit
   .kv-band__place{font-size:9px;letter-spacing:.08em}
 }
 .face.front{
-  --box-hole-x:10%;--box-hole-y:50%;--box-hole-radius:10px;
-  background:transparent;overflow:hidden;pointer-events:none;
+  background:var(--card);overflow:hidden;pointer-events:none;
 }
-/* アンケートの穴を同じ位置に保ったまま、黒い前面だけを重ねていく */
-.face.front::after{
-  content:"";position:absolute;inset:0;z-index:12;pointer-events:none;opacity:0;
-  background:radial-gradient(circle var(--box-hole-radius) at var(--box-hole-x) var(--box-hole-y),
-    transparent 0 54%,rgba(232,72,31,.96) 59% 64%,#020203 70% 79%,#111115 88% 100%);
-  transform:translateZ(1px);
-  transition:opacity .9s cubic-bezier(.22,.8,.2,1);
-}
-.cube.box-morph .face.front::after,
-.cube.black-structure .face.front::after{opacity:1}
-.cube.hole-on-side .face.front::after{
-  opacity:1;transition-duration:.12s;
-  background:linear-gradient(135deg,#151519 0%,#09090b 68%,#050506 100%);
-}
-.cube.black-structure .face.front{background:transparent}
 .cube.black-structure .face.back{background:#070709}
 .cube.black-structure .face.right{background:linear-gradient(105deg,#0d0d10,#050506)}
-.cube.black-structure .face.left{
-  background:linear-gradient(112deg,#08080a 0%,#131316 62%,#050506 100%);
-  border-right:1px solid #E8481F;
-}
+.cube.black-structure .face.left{background:linear-gradient(112deg,#08080a 0%,#131316 62%,#050506 100%)}
 .cube.black-structure .face.top{background:linear-gradient(150deg,#151519,#070708)}
 .cube.black-structure .face.bottom{background:#050506}
-.cube.hole-on-side .face.left{
-  -webkit-mask:radial-gradient(circle var(--side-hole-radius) at var(--side-hole-x) var(--side-hole-y),
-    transparent 0 54%,#000 61% 100%);
-  mask:radial-gradient(circle var(--side-hole-radius) at var(--side-hole-x) var(--side-hole-y),
-    transparent 0 54%,#000 61% 100%);
-}
-/* 回転中に見えてくる各面も、紫から黒へ同じ速度で変化させる */
+/* 回転中に見えてくる各面も、黒へ変化させる */
 .face.back::after,.face.right::after,.face.left::after,.face.top::after,.face.bottom::after{
   content:"";position:absolute;inset:0;pointer-events:none;opacity:0;
   transition:opacity .9s cubic-bezier(.22,.8,.2,1);
 }
 .face.back::after{background:#070709}
 .face.right::after{background:linear-gradient(105deg,#0d0d10,#050506)}
-.face.left{
-  --side-hole-x:58%;--side-hole-y:46%;--side-hole-radius:10px;
-}
 .face.left::after{background:linear-gradient(112deg,#08080a 0%,#131316 62%,#050506 100%)}
-.cube.hole-on-side .face.left::after{
-  opacity:1;transition-duration:.12s;
-  background:radial-gradient(circle var(--side-hole-radius) at var(--side-hole-x) var(--side-hole-y),
-    transparent 0 54%,rgba(232,72,31,.96) 59% 64%,#020203 70% 79%,#101013 88% 100%);
-}
 .face.top::after{background:linear-gradient(150deg,#151519,#070708)}
 .face.bottom::after{background:#050506}
-.cube.box-morph .face.back::after,.cube.box-morph .face.right::after,
-.cube.box-morph .face.left::after,.cube.box-morph .face.top::after,
-.cube.box-morph .face.bottom::after,.cube.black-structure .face.back::after,
+.cube.black-structure .face.back::after,
 .cube.black-structure .face.right::after,.cube.black-structure .face.left::after,
 .cube.black-structure .face.top::after,.cube.black-structure .face.bottom::after{opacity:1}
-/* 紫の面に空いた枠。外側が紫で塗りつぶされる */
-.frame{position:absolute;border-radius:8px;box-shadow:0 0 0 4000px var(--surface);pointer-events:none;
-  transition:box-shadow .75s ease,outline-color .75s ease,border-radius .75s ease,
-    left .75s var(--ease),top .75s var(--ease),width .75s var(--ease),height .75s var(--ease)}
-.frame::before,.frame::after{
-  content:"";position:absolute;top:0;bottom:0;width:14px;background:var(--card);
-  transition:opacity .8s ease;
-}
-.frame::before{left:0;border-radius:8px 0 0 8px}
-.frame::after{right:0;border-radius:0 8px 8px 0}
-.frame.final-box::before,.frame.final-box::after{opacity:0}
-.face.back  {background:#c7bddb}
-.face.right {background:#dcd4ec}
-.face.left  {background:#dcd4ec}
-.face.top   {background:#e6e0f2}
-.face.bottom{background:#cfc6e2}
+.face.back  {background:var(--surface)}
+.face.right {background:var(--surface)}
+.face.left  {background:var(--surface)}
+.face.top   {background:var(--surface)}
+.face.bottom{background:var(--surface)}
 
-/* 白い面は紫より奥のレイヤー。枠の穴から見えている */
 .sheet-anchor{
   position:absolute;overflow:hidden;transform-style:flat;
   clip-path:inset(0);-webkit-clip-path:inset(0);
-  --hole-x:-40px;--hole-y:-40px;--hole-radius:0px;
-  background:radial-gradient(circle var(--hole-radius) at var(--hole-x) var(--hole-y),
-    transparent 0 93%,rgba(255,255,255,.55) 97%,var(--card) 100%);
-  transition:opacity .8s ease,--hole-radius .42s cubic-bezier(.22,.8,.2,1);
+  background:var(--card);pointer-events:auto;
+  transition:opacity .8s ease;
 }
-.sheet-anchor.has-peep-hole{--hole-radius:10px}
 .sheet{position:absolute;inset:0;overflow:hidden;background:transparent;
   transition:transform 1.1s cubic-bezier(.5,0,.75,1)}
 .track{position:absolute;top:0;left:0;width:100%;transition:transform .32s var(--ease)}
 .page{
-  display:flex;flex-direction:column;justify-content:flex-start;padding:24px;
+  display:flex;flex-direction:column;justify-content:flex-start;padding:16px;gap:12px;
   overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;
   scrollbar-width:none;-webkit-overflow-scrolling:touch;
   flex-shrink:0;min-height:0;
 }
 .page::-webkit-scrollbar{display:none}
 .page > *{flex:0 0 auto}
+/* 本物の Google フォームと同じく、各セクションを白いカードにする */
+.fcard{
+  width:100%;background:var(--card-fill,#fff);
+  border:1px solid var(--line);border-radius:8px;
+  padding:24px;
+}
+.fcard--head{border-top:10px solid var(--accent);padding-top:22px}
 
 .ui{position:absolute;display:flex;flex-direction:column;gap:12px}
 
@@ -235,15 +211,15 @@ body{font-family:Roboto,'Noto Sans JP',Arial,sans-serif;color:var(--ink);-webkit
 .form-desc{margin-top:12px;font-size:14px;line-height:1.5;white-space:pre-line}
 .rule{border:0;border-top:1px solid var(--line);margin:16px 0 12px}
 .req-note{font-size:14px;color:var(--req)}
-.q-title{font-size:16px;font-weight:400;line-height:24px;overflow-wrap:anywhere;line-break:strict}
+.q-title{font-size:20px;font-weight:400;line-height:30px;overflow-wrap:anywhere;line-break:strict}
 .q-title .star{color:var(--req);margin-left:2px}
 .q-help{margin-top:4px;font-size:12px;line-height:16px;color:var(--ink-sub)}
 .short{margin-top:22px;width:min(320px,100%);font:inherit;font-size:14px;color:var(--ink);
   border:0;border-bottom:1px solid var(--line);padding:6px 0 8px;background:transparent}
 .short::placeholder{color:var(--ink-hint)}
 .short:focus{outline:none;border-bottom:2px solid var(--accent);padding-bottom:7px}
-.opts{margin-top:12px;display:flex;flex-direction:column}
-.opt{display:flex;align-items:center;gap:12px;padding:8px 0;cursor:pointer;font-size:14px;line-height:20px}
+.opts{margin-top:20px;display:flex;flex-direction:column}
+.opt{display:flex;align-items:center;gap:14px;padding:11px 0;cursor:pointer;font-size:16px;line-height:24px}
 .opt input{position:absolute;opacity:0;width:0;height:0}
 .dot{position:relative;flex:0 0 auto;width:20px;height:20px;border-radius:50%;
   border:2px solid var(--ink-sub);display:grid;place-items:center;
@@ -253,12 +229,12 @@ body{font-family:Roboto,'Noto Sans JP',Arial,sans-serif;color:var(--ink);-webkit
   background:currentColor;opacity:0;transition:opacity .15s}
 .opt:hover .dot::before{opacity:.06}
 .opt:active .dot{transform:scale(.96)}
-.dot::after{content:"";position:absolute;inset:3px;border-radius:50%;
-  background:#E8481F;box-shadow:none;
-  opacity:0;transform:scale(.08);transition:opacity .2s ease,transform .35s var(--ease)}
-.opt input:focus-visible + .dot{outline:2px solid #E8481F;outline-offset:3px}
-.opt input:checked + .dot{color:#E8481F;border-color:#050506;box-shadow:0 0 0 2px rgba(232,72,31,.14);opacity:0}
-.opt input:checked + .dot::after{opacity:1;transform:scale(1)}
+.dot::after{content:"";position:absolute;top:50%;left:50%;width:10px;height:10px;border-radius:50%;
+  background:#FB4104;box-shadow:none;
+  opacity:0;transform:translate(-50%,-50%) scale(.08);transition:opacity .2s ease,transform .35s var(--ease)}
+.opt input:focus-visible + .dot{outline:2px solid #FB4104;outline-offset:3px}
+.opt input:checked + .dot{color:#FB4104;border-color:#FB4104;box-shadow:0 0 0 2px rgba(251,65,4,.14)}
+.opt input:checked + .dot::after{opacity:1;transform:translate(-50%,-50%) scale(1)}
 .error{display:none;align-items:center;gap:8px;margin-top:16px;font-size:12px;line-height:16px;color:var(--req)}
 .error.on{display:flex}
 
@@ -274,26 +250,27 @@ body{font-family:Roboto,'Noto Sans JP',Arial,sans-serif;color:var(--ink);-webkit
   background:none;border:0;color:var(--accent);height:36px;padding:0 8px;border-radius:4px;cursor:pointer}
 .clear:hover{background:rgba(103,58,183,.06)}
 .bar{height:4px;background:#e0e0e0;border-radius:2px;overflow:hidden}
-@keyframes dot-off{to{opacity:0;transform:scale(.08)}}
+@keyframes dot-off{to{opacity:0;transform:translate(-50%,-50%) scale(.08)}}
 .page.is-leaving .dot::after{animation:dot-off 0.001s linear forwards !important}
 .bar > i{display:block;height:100%;background:var(--accent);transition:width .3s var(--ease)}
 /* 狭いスマホと横向きスマホでは、正方形の中だけをコンパクトにする */
 @media (max-width:600px), (max-height:520px){
   .kv-title img{width:min(94vw,760px);max-height:58vh;object-fit:contain;margin-top:-2vh}
-  .page{padding:14px 18px}
+  .page{padding:10px 12px;gap:8px}
+  .fcard{padding:16px}
+  .fcard--head{border-top-width:8px;padding-top:14px}
   .ui{gap:7px}
   .form-title{font-size:clamp(22px,7.2vw,28px);line-height:1.25}
   .form-desc{margin-top:8px;font-size:11px;line-height:1.45}
   .rule{margin:10px 0 8px}
   .req-note{font-size:11px}
-  .q-title{font-size:14px;line-height:20px}
+  .q-title{font-size:15px;line-height:22px}
   .q-help{font-size:10px;line-height:14px}
   .opts{margin-top:7px}
-  .opt{gap:10px;padding:6px 0;font-size:13px;line-height:18px}
+  .opt{gap:10px;padding:8px 0;font-size:14px;line-height:20px}
   .dot{width:18px;height:18px}
   .dot::before{width:34px;height:34px}
   .dot::after{width:9px;height:9px}
-  .sheet-anchor.has-peep-hole{--hole-radius:9px}
   .error{margin-top:7px;font-size:10px;line-height:14px}
   .foot{gap:7px}
   .btn{height:32px;padding:0 16px;font-size:12px}
@@ -303,7 +280,8 @@ body{font-family:Roboto,'Noto Sans JP',Arial,sans-serif;color:var(--ink);-webkit
 }
 
 @media (max-width:360px), (max-height:420px){
-  .page{padding:11px 17px}
+  .page{padding:8px 10px}
+  .fcard{padding:13px}
   .form-title{font-size:21px}
   .form-desc{font-size:10px}
   .q-title{font-size:13px;line-height:18px}
@@ -332,7 +310,7 @@ html.intro-pending .kv-poster{visibility:hidden}
   width:var(--sq);height:var(--sq);
   font-family:'Noto Serif JP','Yu Mincho','Hiragino Mincho ProN',serif;
   font-weight:200;font-size:calc(var(--sq) / 10.6);line-height:1;letter-spacing:0;
-  color:#fff;
+  color:#fff;background:#0a0a0c;
 }
 .statement__copy .c{
   display:flex;align-items:center;justify-content:center;
@@ -354,11 +332,11 @@ html.intro-pending .kv-poster{visibility:hidden}
 .gate{display:none;color:#fff}
 .gate.is-live{
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  position:fixed;inset:0;z-index:200;background:#000;
+  position:fixed;inset:0;z-index:200;background:#fff;
   padding:clamp(20px,5vw,64px);
 }
 .gate__field{
-  position:relative;padding:clamp(26px,6vmin,58px);
+  position:relative;padding:0;
   transform-origin:var(--zoom-x,50%) var(--zoom-y,50%);
   transition:transform 2.6s cubic-bezier(.62,0,.16,1),opacity 1.7s ease;
 }
@@ -395,9 +373,9 @@ html.intro-pending .kv-poster{visibility:hidden}
   position:absolute;right:clamp(20px,5vw,64px);bottom:22px;
   background:none;border:0;padding:8px;cursor:pointer;
   font-family:'Roboto Mono',ui-monospace,monospace;
-  font-size:11px;letter-spacing:.22em;color:rgba(255,255,255,.4);
+  font-size:11px;letter-spacing:.22em;color:rgba(0,0,0,.4);
 }
-.gate__skip:hover{color:#fff}
+.gate__skip:hover{color:#000}
 .gate.is-text-fade .c{opacity:0 !important;transition:opacity .65s ease !important;transition-delay:0ms !important}
 .gate.is-out{opacity:0;transition:opacity .8s ease;pointer-events:none}
 </style>
@@ -414,7 +392,6 @@ html.intro-pending .kv-poster{visibility:hidden}
     </div>
     <p class="statement__copy" data-split>１辺３ｍの黒箱。その中に広がる小さな世界。あなたは覗き、聞くことしかできない。そこでは、たしかに誰かの人生がおわろうとしている。</p>
   </div>
-  <button class="gate__skip" id="gateSkip" type="button">スキップ</button>
 </div>
 
 <div class="stage">
@@ -431,19 +408,23 @@ html.intro-pending .kv-poster{visibility:hidden}
     <div class="face top"></div>
     <div class="face bottom"></div>
 
-    <div class="sheet-anchor" id="sheetAnchor">
+    <div class="face front" id="front">
+      <div class="sheet-anchor" id="sheetAnchor">
         <div class="sheet" id="sheet">
           <div class="track" id="track">
 
             <div class="page" data-page>
-              <h1 class="form-title">参加前アンケート</h1>
+              <div class="fcard fcard--head">
+              <h1 class="form-title">人間観察についてのアンケート</h1>
               <p class="form-desc">回答内容は自動的に記録されます。
 所要時間はおよそ2分です。</p>
               <hr class="rule">
               <p class="req-note">* 必須の質問です</p>
+              </div>
             </div>
 
             <div class="page" data-page>
+              <div class="fcard">
               <p class="q-title" id="q1">カフェや電車で、つい他人の会話が気になってしまう<span class="star">*</span></p>
               <div class="opts" role="radiogroup" aria-labelledby="q1">
                 <label class="opt">
@@ -458,9 +439,11 @@ html.intro-pending .kv-poster{visibility:hidden}
                 </label>
               </div>
               <div class="error"><svg width="16" height="16" viewBox="0 0 24 24" fill="#d93025"><path d="M12 2 1 21h22L12 2zm1 14h-2v2h2v-2zm0-6h-2v4h2v-4z"/></svg><span>必須の質問です</span></div>
+              </div>
             </div>
 
             <div class="page" data-page>
+              <div class="fcard">
               <p class="q-title" id="q2">電車で向かいに座った人を見て、どんな仕事をしているか勝手に想像したことがある<span class="star">*</span></p>
               <div class="opts" role="radiogroup" aria-labelledby="q2">
                 <label class="opt">
@@ -475,10 +458,12 @@ html.intro-pending .kv-poster{visibility:hidden}
                 </label>
               </div>
               <div class="error"><svg width="16" height="16" viewBox="0 0 24 24" fill="#d93025"><path d="M12 2 1 21h22L12 2zm1 14h-2v2h2v-2zm0-6h-2v4h2v-4z"/></svg><span>必須の質問です</span></div>
+              </div>
             </div>
 
             <div class="page" data-page>
-              <p class="q-title" id="q3">人間観察はおすきですか？<span class="star">*</span></p>
+              <div class="fcard">
+              <p class="q-title" id="q3">人間観察はお好きですか？<span class="star">*</span></p>
               <div class="opts" role="radiogroup" aria-labelledby="q3">
                 <label class="opt">
                   <input type="radio" name="q3" value="はい">
@@ -492,17 +477,14 @@ html.intro-pending .kv-poster{visibility:hidden}
                 </label>
               </div>
               <div class="error"><svg width="16" height="16" viewBox="0 0 24 24" fill="#d93025"><path d="M12 2 1 21h22L12 2zm1 14h-2v2h2v-2zm0-6h-2v4h2v-4z"/></svg><span>必須の質問です</span></div>
+              </div>
             </div>
 
             <div class="page" data-page id="donePage" hidden aria-hidden="true"></div>
 
           </div>
         </div>
-    </div>
-
-    <div class="face front" id="front">
-      <div class="frame" id="frame"></div>
-
+      </div>
       <div class="ui" id="ui">
         <div class="foot" id="foot">
           <div style="display:flex;gap:8px;align-items:center">
@@ -565,8 +547,6 @@ const FINAL = {
 
 const cube  = document.getElementById('cube');
 const front = document.getElementById('front');
-const leftFace = document.querySelector('.face.left');
-const frame = document.getElementById('frame');
 const anchor= document.getElementById('sheetAnchor');
 const PERSP = 1800, DEPTH = 90;
 const track = document.getElementById('track');
@@ -584,59 +564,16 @@ const kvPoster = document.getElementById('kvPoster');
 
 let step = 0, done = false, busy = false, S = 0, H = 0;
 let posterShown = false;
-let peepRaf = 0;
-
-function closePeepHole(){
-  if(peepRaf){ cancelAnimationFrame(peepRaf); peepRaf = 0; }
-  anchor.classList.remove('has-peep-hole');
-}
-
-function openPeepHole(input){
-  const dot = input && input.nextElementSibling;
-  if(!dot || !input.checked) return;
-  const dotRect = dot.getBoundingClientRect();
-  const anchorRect = anchor.getBoundingClientRect();
-  const cx = dotRect.left + dotRect.width / 2;
-  const cy = dotRect.top + dotRect.height / 2;
-  const anchorX = (cx - anchorRect.left) / anchorRect.width * 100;
-  const anchorY = (cy - anchorRect.top) / anchorRect.height * 100;
-  anchor.style.setProperty('--hole-x', anchorX + '%');
-  anchor.style.setProperty('--hole-y', anchorY + '%');
-  if(peepRaf) cancelAnimationFrame(peepRaf);
-  peepRaf = requestAnimationFrame(() => {
-    peepRaf = 0;
-    anchor.classList.add('has-peep-hole');
-  });
-}
-
-function syncPeepHole(){
-  const checked = pages[step] && pages[step].querySelector('input[type="radio"]:checked');
-  if(checked) openPeepHole(checked);
-  else closePeepHole();
-}
-
-function placeBoxHoleAtSelection(){
-  const radios = [...document.querySelectorAll('input[type="radio"]:checked')];
-  const selected = radios[radios.length - 1] || document.querySelector('input[type="radio"]');
-  const dot = selected && selected.nextElementSibling;
-  if(!dot) return;
-  const dotRect = dot.getBoundingClientRect();
-  const frontRect = front.getBoundingClientRect();
-  const cx = dotRect.left + dotRect.width / 2;
-  const cy = dotRect.top + dotRect.height / 2;
-  const x = (cx - frontRect.left) / frontRect.width * 100;
-  const y = (cy - frontRect.top) / frontRect.height * 100;
-  const radius = Math.max(9, Math.round(S * .024)) + 'px';
-  front.style.setProperty('--box-hole-x', (100 - x) + '%');
-  front.style.setProperty('--box-hole-y', y + '%');
-  front.style.setProperty('--box-hole-radius', radius);
-  leftFace.style.setProperty('--side-hole-y', y + '%');
-  leftFace.style.setProperty('--side-hole-radius', radius);
-}
 
 function revealPoster(){
   if(posterShown || location.hash === '#tune') return;
   posterShown = true;
+  /* 箱の実位置を測り、そこを中心にKVが丸く開くようにする */
+  const r = cube.getBoundingClientRect();
+  const vw = window.innerWidth || document.documentElement.clientWidth || 1;
+  const vh = window.innerHeight || document.documentElement.clientHeight || 1;
+  kvPoster.style.setProperty('--kv-ox', (((r.left + r.width / 2) / vw) * 100).toFixed(1) + '%');
+  kvPoster.style.setProperty('--kv-oy', (((r.top + r.height / 2) / vh) * 100).toFixed(1) + '%');
   kvPoster.setAttribute('aria-hidden', 'false');
   requestAnimationFrame(() => kvPoster.classList.add('is-visible'));
 }
@@ -664,7 +601,7 @@ function layout(){
   const widthRatio = compact ? .98 : .88;
   const heightRatio = compact ? .97 : .88;
   const minimumOuterGap = compact ? 8 : 48;
-  const maxFrontVisual = compact ? Infinity : (520 * PERSP / (PERSP - 260));
+  const maxFrontVisual = compact ? Infinity : (390 * PERSP / (PERSP - 260));
   const targetVisual = Math.max(1, Math.min(
     viewportW * widthRatio,
     viewportH * heightRatio,
@@ -721,21 +658,9 @@ function layout(){
   }
   H = Math.max(0, available);
 
-  /* 紫の面に空いた枠 */
-  frame.style.left = sidePad + 'px'; frame.style.top = topPad + 'px';
-  frame.style.width = docW + 'px'; frame.style.height = H + 'px';
-
-  /* 白い面は枠より DEPTH だけ奥。奥にある分を拡大して、見かけは枠と一致させる */
-  const k = (PERSP - half + DEPTH) / (PERSP - half);
   anchor.style.left = sidePad + 'px'; anchor.style.top = topPad + 'px';
   anchor.style.width = docW + 'px'; anchor.style.height = H + 'px';
-  anchor.style.transformOrigin = (S / 2 - sidePad) + 'px ' + (S / 2 - topPad) + 'px';
-  if(compact && !done){
-    /* 入力中は正面と同じ面に置く。3Dの奥行きだとiOSで中身が潰れる */
-    anchor.style.transform = `translateZ(${half}px)`;
-  } else {
-    anchor.style.transform = `translateZ(${half - DEPTH}px) scale(${k})`;
-  }
+  anchor.style.transform = 'none';
 
   ui.style.top = (topPad + H + gap) + 'px';
   ui.style.height = Math.max(0, docH - H - gap) + 'px';
@@ -746,7 +671,6 @@ function layout(){
     p.style.maxHeight = H + 'px';
   });
   place(false);
-  requestAnimationFrame(syncPeepHole);
 }
 
 function place(animate){
@@ -787,12 +711,10 @@ function next(){
   if(step === pages.length - 2){ submit(); return; }
   busy = true;
   pages[step].classList.add('is-leaving');
-  closePeepHole();
   step++; place(true); chrome();
   setTimeout(() => {
     busy = false;
     pages.forEach(p => p.classList.remove('is-leaving'));
-    syncPeepHole();
   }, 360);
 }
 function back(){
@@ -800,46 +722,44 @@ function back(){
   clearError(pages[step]);
   busy = true;
   pages[step].classList.add('is-leaving');
-  closePeepHole();
   step--; place(true); chrome();
   setTimeout(() => {
     busy = false;
     pages.forEach(p => p.classList.remove('is-leaving'));
-    syncPeepHole();
   }, 360);
 }
 
-/* 送信 → フォーム面をそのまま黒い立方体へ変える → 一回転 → KV */
+/* 送信 → 正方形が黒くなる（見せる）→ 8x8テキスト → 立方体回転 → KV */
 function submit(){
   done = true;
-  placeBoxHoleAtSelection();
   foot.hidden = true; clearBtn.hidden = true; bar.hidden = true;
 
-  /* ゲート演出中にキューブを黒くサイレント変換する */
-  anchor.style.visibility = 'hidden';
+  /* カードをフェードで隠し、正方形の色を薄紫→黒へ 0.6s でなめらかに落とす */
+  anchor.style.transition = 'opacity .45s ease';
+  anchor.style.opacity = '0';
+  anchor.style.pointerEvents = 'none';
   ui.style.visibility = 'hidden';
-  frame.classList.add('final-box');
-  frame.style.visibility = 'hidden';
-  frame.style.boxShadow = 'none';
-  frame.style.background = 'transparent';
-  frame.style.borderRadius = '0';
-  frame.style.outline = 'none';
   cube.classList.add('black-structure');
-  document.querySelectorAll('.face').forEach(f => {
-    f.style.background = '#0a0a0c';
-    f.style.outline = '1px solid rgba(255,255,255,.08)';
+  const faces = document.querySelectorAll('.face');
+  faces.forEach(f => { f.style.transition = 'background-color .6s ease'; });
+  front.style.transition = 'background-color .6s ease';
+  /* 次フレームで黒へ遷移させ、0.6s のトランジションを効かせる */
+  requestAnimationFrame(() => {
+    faces.forEach(f => {
+      f.style.background = '#0a0a0c';
+      f.style.outline = '1px solid rgba(255,255,255,.08)';
+    });
+    front.style.background = '#0a0a0c';
+    front.style.outline = 'none';
   });
-  front.style.background = '#0a0a0c';
-  front.style.outline = 'none';
 
+  /* 薄紫→黒が落ちきってから（0.6s遷移＋余韻）ゲートへ */
+  setTimeout(function(){
   /* 8x8テキスト演出 → 消滅 → ゲートフェードと同時に白背景＋回転 */
   playGate(function(){
     const stage = document.querySelector('.stage');
 
-    /* ゲートが消え始める瞬間から白背景へトランジション */
-    stage.style.transition = 'background-color 3.2s cubic-bezier(.22,.8,.2,1)';
-    stage.style.background = '#ffffff';
-
+    /* 背景はすでに白（playGate の dismiss 内で設定済み） */
     stage.style.perspective = FINAL.persp + 'px';
     cube.style.transition = 'none';
 
@@ -876,6 +796,7 @@ function submit(){
       setTimeout(revealPoster, 140);
     }, {once:true});
   });
+  }, 800); /* 薄紫→黒の 0.6s 遷移が終わるのを待ち、少し余韻を置いてからゲートへ */
 }
 
 nextBtn.addEventListener('click', next);
@@ -886,13 +807,11 @@ clearBtn.addEventListener('click', () => {
     else i.value = '';
   });
   document.querySelectorAll('.error').forEach(e => e.classList.remove('on'));
-  closePeepHole();
   step = 0; place(true); chrome();
 });
 document.addEventListener('change', e => {
   if(e.target.type !== 'radio') return;
   clearError(pages[step]);
-  openPeepHole(e.target);
 });
 window.addEventListener('resize', layout);
 window.addEventListener('orientationchange', () => setTimeout(layout, 80));
@@ -946,9 +865,6 @@ function tuner(){
     cube.style.transition = 'none';
     cube.style.transform = finalTransform();
     document.querySelector('.stage').style.perspective = FINAL.persp + 'px';
-    frame.style.outline = cube.classList.contains('black-structure')
-      ? 'none'
-      : FINAL.edge + 'px solid #ffffff';
     const per = document.getElementById('kvPerson');
     per.style.left = FINAL.px + '%';
     per.style.bottom = FINAL.py + '%';
@@ -1017,9 +933,10 @@ function playGate(onDone){
     inerted.push(el);
   });
 
-  /* キューブと同じサイズにする */
+  /* キューブ前面と同じ視覚サイズにする（パースペクティブ補正） */
   if(copy && typeof S !== 'undefined' && S > 0){
-    copy.style.setProperty('--sq', S + 'px');
+    var visualSq = Math.round(S * PERSP / (PERSP - S / 2));
+    copy.style.setProperty('--sq', visualSq + 'px');
   }
 
   gate.classList.add('is-live');
@@ -1033,16 +950,25 @@ function playGate(onDone){
   var measuredReveal = copy ? parseInt(copy.getAttribute('data-reveal-duration') || '', 10) : NaN;
   var CHAR_FADE = 350;
   var textFullyOn = copyStart + (isNaN(measuredReveal) ? 63 * 78 : measuredReveal) + CHAR_FADE;
-  var pauseAfterText = 1000;          /* テキストが読まれる間 */
+  var pauseAfterText = 800;           /* テキストが読まれる間 */
   var textFadeStart = textFullyOn + pauseAfterText;
-  var TEXT_FADE_DUR = 650;            /* ms: テキストフェードアウト時間 */
-  var dismissStart = textFadeStart + TEXT_FADE_DUR + 200;
+  var TEXT_FADE_DUR = 600;            /* ms: テキストフェードアウト時間 */
+  var bgWhiteStart = textFadeStart + TEXT_FADE_DUR + 150; /* 正方形が浮かび上がる */
+  var BG_WHITE_DUR = 700;             /* ms: 背景ホワイト遷移 */
+  var dismissStart = bgWhiteStart + BG_WHITE_DUR + 150;
 
   /* テキスト登場 */
   later(function(){ if(copy) copy.classList.add('is-on'); }, copyStart);
-  /* テキスト消滅 */
+  /* テキスト消滅 → 黒い正方形が残る */
   later(function(){ gate.classList.add('is-text-fade'); }, textFadeStart);
-  /* ゲートフェードアウト開始（同時にonDone=回転を起動） */
+  /* 周囲が白くなる（正方形が黒く浮かび上がる） */
+  later(function(){
+    gate.style.transition = 'background-color ' + (BG_WHITE_DUR / 1000) + 's ease';
+    gate.style.background = '#ffffff';
+    /* ステージ背景も同時に白にする（ゲートが消えたとき段差がないように） */
+    document.querySelector('.stage').style.background = '#ffffff';
+  }, bgWhiteStart);
+  /* ゲートフェードアウト → キューブ登場 → 回転 */
   later(dismiss, dismissStart);
 
   var dismissed = false;
@@ -1050,19 +976,25 @@ function playGate(onDone){
     if(dismissed) return;
     dismissed = true;
     timers.forEach(clearTimeout);
-    gate.classList.add('is-out');
+    /* ステージ白を保証 */
+    document.querySelector('.stage').style.background = '#ffffff';
+    /* ゲートを opacity でフェードアウト */
+    gate.style.transition = 'opacity 0.8s ease';
+    gate.style.opacity = '0';
+    gate.style.pointerEvents = 'none';
     inerted.forEach(function(el){ el.removeAttribute('inert'); });
     document.removeEventListener('keydown', onKey);
-    /* ゲートが消え始めると同時に回転を開始するためすぐにコールバック */
-    if(onDone) onDone();
-    setTimeout(function(){ gate.style.display = 'none'; }, 900);
+    /* ゲートが完全に消えてからキューブ回転を開始 */
+    setTimeout(function(){
+      gate.style.display = 'none';
+      if(onDone) onDone();
+    }, 850);
   }
 
   function onKey(e){
     if(e.key === 'Escape'){ dismiss(); }
   }
   document.addEventListener('keydown', onKey);
-  document.getElementById('gateSkip').addEventListener('click', function(){ dismiss(); });
 }
 
 layout();
