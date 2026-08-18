@@ -893,6 +893,15 @@ function back(){
    空のままだと記録はスキップされ、演出だけ進みます。 */
 const RESPONSE_ENDPOINT = "https://script.google.com/macros/s/AKfycbwvoBarcpNgxHk4wfTr4hyEvFa460Y2mm6XnVZR_eHuPDkEaSgU96ANTJ0T3pLvHQrzIg/exec";
 
+/* 回答とシェアを突合するためのセッションID（送信時に発行） */
+let responseId = '';
+function genId(){
+  try{
+    if(window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  }catch(e){}
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+}
+
 function collectAnswers(){
   const get = name => {
     const el = document.querySelector('input[name="' + name + '"]:checked');
@@ -901,11 +910,11 @@ function collectAnswers(){
   return { q1: get('q1'), q2: get('q2'), q3: get('q3') };
 }
 
-function recordResponse(){
+/* エンドポイントへ fire-and-forget 送信（演出は止めない） */
+function sendEvent(payload){
   if(!RESPONSE_ENDPOINT) return;
   try{
-    const data = collectAnswers();
-    const body = new URLSearchParams(data).toString();
+    const body = new URLSearchParams(payload).toString();
     fetch(RESPONSE_ENDPOINT, {
       method: 'POST',
       mode: 'no-cors',
@@ -913,7 +922,20 @@ function recordResponse(){
       body,
       keepalive: true
     }).catch(() => {});
-  }catch(e){ /* 記録失敗でも演出は止めない */ }
+  }catch(e){ /* 送信失敗でも無視 */ }
+}
+
+function recordResponse(){
+  responseId = genId();
+  const data = collectAnswers();
+  data.type = 'answer';
+  data.id = responseId;
+  sendEvent(data);
+}
+
+/* シェアボタンのクリックを記録（channel: 'X' / 'コピー'） */
+function recordShare(channel){
+  sendEvent({ type: 'share', channel: channel, id: responseId });
 }
 
 /* 送信 → 正方形が黒くなる（見せる）→ 8x8テキスト → 立方体回転 → KV */
@@ -1206,8 +1228,11 @@ setTimeout(layout, 400);
 
 (function(){
   const shareUrl = location.origin + '/';
+  const shareX = document.getElementById('shareX');
+  if(shareX) shareX.addEventListener('click', () => recordShare('X'));
   const copy = document.getElementById('shareCopy');
   if(copy) copy.addEventListener('click', async () => {
+    recordShare('コピー');
     try{
       await navigator.clipboard.writeText(shareUrl);
     }catch(e){
